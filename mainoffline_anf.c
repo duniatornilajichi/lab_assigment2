@@ -27,8 +27,8 @@ int main( void )
 	char  tempc[2];
 
 	int s[3] = {0,0,0};
-	int a[1] = {0};
-	int rho[2] = {0,0}; // rho fixed {rho=?, rho^2}
+	int a[1] = {32767}; // a = 1
+	int rho[2] = {26214,20972}; // rho fixed {rho=0.8, rho^2=0.64}
 	// int rho[2] = {0, 0}; // rho adaptive {rho=?, rho_inf}
 
 	fpIn = fopen("..\\data\\in.pcm", "rb");

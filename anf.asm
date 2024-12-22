@@ -8,10 +8,9 @@
 ;*                                                                            * 
 ;******************************************************************************
 ;/*
-
 	.mmregs
 
-	MU    .set 0					; Edit this value to the desired step-size
+;	MU    .set 0					; Edit this value to the desired step-size
 
 ; Functions callable from C code
 
@@ -48,6 +47,7 @@ _anf:
                                
 		RET								; Exit function call
     
+
 
 ;*******************************************************************************
 ;* End of anf.asm                                              				   *

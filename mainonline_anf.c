@@ -1,3 +1,4 @@
+/*
 #include <aic3204.h>
 #include <dsplib.h>
 #include <stdio.h>
@@ -27,3 +28,4 @@ int main() {
 
   return 0;
 }
+*/

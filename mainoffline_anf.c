@@ -27,7 +27,7 @@ int main( void )
 	char  tempc[2];
 
 	int s[3] = {0,0,0};
-	int a[1] = {32767}; // a = 1
+	int a[1] = {16384}; // a=1 (Q14)
 	int rho[2] = {26214,20972}; // rho fixed {rho=0.8, rho^2=0.64}
 	// int rho[2] = {0, 0}; // rho adaptive {rho=?, rho_inf}
 

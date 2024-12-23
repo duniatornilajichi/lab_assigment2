@@ -16,7 +16,7 @@
  *  main( )                                                                 *
  *                                                                          *
  * ------------------------------------------------------------------------ */
-int main( void ) 
+int main( void )
 {
 	int y, e, tmp1;
 	unsigned int index = 0;
@@ -27,9 +27,8 @@ int main( void )
 	char  tempc[2];
 
 	int s[3] = {0,0,0};
-	int a[1] = {16384}; // a=1 (Q14)
-	int rho[2] = {26214,20972}; // rho fixed {rho=0.8, rho^2=0.64}
-	// int rho[2] = {0, 0}; // rho adaptive {rho=?, rho_inf}
+	int a[1] = {16384}; // a = 1
+	int rho[2] = {26214, 28836}; // rho adaptive {rho=0.8, rho_inf=0.88}
 
 	fpIn = fopen("..\\data\\in.pcm", "rb");
 	fpOut = fopen("..\\data\\out.pcm", "wb");
@@ -41,9 +40,10 @@ int main( void )
 
 	//Begin filtering the data
 	while (fread(tempc, sizeof(char), 2, fpIn) == 2) {
+
 		y = (tempc[0] & 0xFF) | (tempc[1] << 8);
 		e = anf(y ,&s[0], &a[0], &rho[0], &index); // Adaptive Notch Filter.
-		
+
 		tempc[0] = (e & 0xFF);
 		tempc[1] = (e >> 8) & 0xFF;
 		

@@ -29,7 +29,9 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
     rho[0] = (int) (AC0 >> 15); // Q30 -> Q15
 
     // STEP 2): calculate new s and insert in circular buffer
-    AC1 = (((long) rho[0]) >> 1) * a_i; // Q14 * Q14 = Q28
+    AC0 = (long) rho[0] + 1; // Round the part we'll truncate by adding 2^0
+    AC0 >>= 1;
+    AC1 = AC0 * a_i; // Q14 * Q14 = Q28
     AC1 += 32768; // Round the part we'll truncate by adding 2^15
     AC1 >>= 16; // Q28 -> Q12
     AC1 = AC1 * s[k_minus_1]; // Q12 * Q12 -> Q24

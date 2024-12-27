@@ -11,6 +11,7 @@
 #include "stdio.h"
 #include "anf.h"
 
+#pragma CODE_SECTION(anf,       ".text:anf");
 /* ------------------------------------------------------------------------ *
  *                                                                          *
  *  main( )                                                                 *

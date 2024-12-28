@@ -17,13 +17,16 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
 
     k = *index;
 
-    unsigned int k_minus_1 = (k+2)%3;
-    unsigned int k_minus_2 = (k+1)%3;
+    // Update circular buffer index
+    unsigned int k_minus_1 = (k == 0) ? 2 : k - 1;
+    unsigned int k_minus_2 = (k < 2) ? k + 1 : 0;
+    *index = (k == 2) ? 0 : k + 1;
+
     long a_i = (long) *a;
 
-    // STEP 1): update rho
-    AC0 = (long) lambda * rho[0]; // Q15 * Q15 = Q30
-    AC1 = (long) (32767 - lambda) * rho[1]; // Q15 * Q15 = Q30
+    // STEP 1): update rho (lambda is 0,99 -> 32440 in Q15)
+    AC0 = (long) 32440 * rho[0]; // Q15 * Q15 = Q30
+    AC1 = (long) (32767 - 32440) * rho[1]; // Q15 * Q15 = Q30
     AC0 += AC1; // Q30 + Q30 = Q30
     AC0 += 16384; // Round the part we'll truncate by adding 2^14
     rho[0] = (int) (AC0 >> 15); // Q30 -> Q15
@@ -67,9 +70,6 @@ int anf(int y, int *s, int *a, int *rho, unsigned int* index)
     AC1 = AC0 * AC1; // Q14 * Q14 = Q28
     AC1 += 8192; // Round the part we'll truncate by adding 2^13
     *a  = (int) (a_i + (AC1 >> 14)); // Q28 -> Q14
-
-    // Update circular buffer index
-    *index = (k == 2) ? 0 : k + 1;
 
     return e;
 }

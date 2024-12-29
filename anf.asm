@@ -90,10 +90,12 @@ _anf:
 		;SFTS	AC1, #-16			; L39: AC1>>16
 
 		ADD		T2, AR0				; s-1
-		MOV		*AR0, *AR5			; L40: AR5 = s_circ[-1]
+		MOV		*AR0, AC2	; this	; L40: AR5 = s_circ[-1]
 		SUB		T2, AR0
+		MOV		AC2, *AR5
+		SFTS	AC2, #16
 		;SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPY		*AR5, AC1			; AC1 = AC1 * AR5 -> AC1 * s_circ[-1]
+		MPY		AC2, AC1			; AC1 = AC1 * AR5 -> AC1 * s_circ[-1]
 
 		MOV 	T0, AC0				; L42: AC0 = y
 		SFTS	AC0, #9				; ACO << 9
@@ -112,19 +114,21 @@ _anf:
 		SFTS	AC1, #-18			; L47: AC1>>18
 
 		ADD		T3, AR0
-		MOV		*AR0, *AR6			; L48: AR6 = s_circ[-2]
+		MOV		*AR0, AC3			; L48: AR6 = s_circ[-2]
 		SUB		T3, AR0
+		MOV		AC3, *AR6
+		SFTS	AC3, #16
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPY		*AR6, AC1			; AC1 = AR6*HI(AC1)
+		MPY		AC3, AC1			; AC1 = AR6*HI(AC1)
 
 		SUB		AC1, AC0			; L50: AC0 = AC0 - AC1
 		ADD		#2048, AC0 			; L51: AC0 = AC0 + 2048
 
 		SFTS	AC0, #-12			; L53: AC0>>12
-		ADD		*AR3, AR0
+		MOV		*AR3, T1
+		ADD		T1, AR0
 		MOV		AC0, *AR0			; s[0] = s_circ[0]
-		SUB		*AR3, AR0
-
+		SUB		T1, AR0
 
 		;STEP 3): update e
 		MOV		*AR1, AC0			; L56: AC0 = *a
@@ -182,4 +186,3 @@ _anf:
 		POP	mmap(ST0_55)
 
 		RET								; Exit function call
-

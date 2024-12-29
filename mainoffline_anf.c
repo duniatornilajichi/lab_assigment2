@@ -9,9 +9,11 @@
 /*****************************************************************************/
 
 #include "stdio.h"
-#include "anf.h"
+//#include "anf.h"
+//#include "usbstk5515.h"
 
-#pragma CODE_SECTION(anf,       ".text:anf");
+extern int anf(int y, int *s, int*a, int*rho, unsigned int *index);
+//#pragma CODE_SECTION(anf,       ".text:anf");
 /* ------------------------------------------------------------------------ *
  *                                                                          *
  *  main( )                                                                 *
@@ -19,15 +21,16 @@
  * ------------------------------------------------------------------------ */
 int main( void )
 {
-	int y, e, tmp1;
-	unsigned int index = 0;
-	
+    //USBSTK5515_init(); // Initializing the Processor
+
 	FILE  *fpIn;
 	FILE  *fpOut;
 	
+	int y, e;
+	unsigned int index = 0;
 	char  tempc[2];
 
-	int s[3] = {0,0,0};
+	int s[4] = {0,0,0,0};
 	int a[1] = {16384}; // a = 1
 	int rho[2] = {26214, 28836}; // rho adaptive {rho=0.8, rho_inf=0.88}
 

@@ -1,9 +1,8 @@
-/*
 #include <dsplib.h>
 #include <stdio.h>
 #include <usbstk5515.h>
 #include "aic3204.h"
-#include "anf.h"
+//#include "anf.h" //INCLUDE FOR C IMPLEMENTATION
 #define SAMPLES_PER_SECOND 8000
 #define GAIN_IN_dB 10
 
@@ -34,4 +33,4 @@ int main() {
 
   return 0;
 }
-*/
+

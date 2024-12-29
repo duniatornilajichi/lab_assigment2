@@ -29,38 +29,38 @@
 ; 	k_minus_2	=>	T3
 ;
 ; 	s[-1] 		=>	*AR5
-; 	s[-2]		=>  *AR6
+; 	s[-2]		=>  *AR7
 _anf:
 
 		PSH  mmap(ST0_55)	; Store original status register values on stack
 		PSH  mmap(ST1_55)
 		PSH  mmap(ST2_55)
 
-		;mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
-		;or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
-		;and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
-		;bclr ARMS                      	; Disable ARMS bit 15 in ST2_55
+		mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
+		or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
+		and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
+		bclr ARMS                      	; Disable ARMS bit 15 in ST2_55
 
 		; add your implementation here:
 		;INIT 0):  pointers k
 		MOV 	*AR3, T1			; T1 = *index
-		MOV     T1, T2				;
-		SUB		#2, T1				; check if index > 2 by subtrancting 2 and comparing
+		MOV     *AR3, T2			;
+		ASUB	#2, T1				; check if index > 2 by subtrancting 2 and comparing
 		XCC		T1>#0
-		MOV		#0, T2
-		MOV		T2, T1
+		AMOV	#0, T2
+		AMOV	T2, T1
 		MOV		T2, *AR3
 
-		SUB		#1, T1				; L21: T1 = k-1
-		MOV		T1, T2				; if (k-1) < 0 -> T2 = 2 else T2 = k-1
+		ASUB	#1, T1				; L21: T1 = k-1
+		AMOV	T1, T2				; if (k-1) < 0 -> T2 = 2 else T2 = k-1
 		XCC		T1<#0				; T2 = k-1 from 0-2
-		MOV		#2, T2
+		AMOV	#2, T2
 
-		MOV		T2, T1				; L22: T1 = k-1 from 0-2
-		SUB		#1, T1				; T1 = T2-1
-		MOV		T1, T3				; if(T2-1) < 0 -> T3 = 2 else T3 = T2 -> (k-1 from 0-2) -1
+		AMOV	T2, T1				; L22: T1 = k-1 from 0-2
+		ASUB	#1, T1				; T1 = T2-1
+		AMOV	T1, T3				; if(T2-1) < 0 -> T3 = 2 else T3 = T2 -> (k-1 from 0-2) -1
 		XCC		T1<#0
-		MOV		#2, T3				; T3 = k-2 from 0-2
+		AMOV	#2, T3				; T3 = k-2 from 0-2
 
 		;STEP 1): update rho
 		MOV 	*AR2, AC0			; L28: T1 = rho[0] in T1 and then increase pointer -> rho[1]
@@ -89,9 +89,9 @@ _anf:
 
 		;SFTS	AC1, #-16			; L39: AC1>>16
 
-		ADD		T2, AR0				; s-1
-		MOV		*AR0, AC2	; this	; L40: AR5 = s_circ[-1]
-		SUB		T2, AR0
+		AADD	T2, AR0				; s-1
+		MOV		*AR0, AC2			; L40: AR5 = s_circ[-1]
+		ASUB	T2, AR0
 		MOV		AC2, *AR5
 		SFTS	AC2, #16
 		;SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
@@ -102,10 +102,11 @@ _anf:
 
 		ADD		AC1, AC0 			; L43: AC0 = AC0 + AC1
 
-		MOV		*AR2, T1			; L45: T1 = rho[0]
-		MOV 	T1, AC1				; AC1 = T1 -> rho[0]
+		MOV		*AR2, AC2			; L45: T1 = rho[0]
+		MOV 	*AR2, AC1			; AC1 = T1 -> rho[0]
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPY		T1, AC1				; AC1 = AC1 * rho[0] -> rho[0] * rho[0]
+		SFTS	AC2, #16
+		MPY		AC2, AC1			; AC1 = AC1 * rho[0] -> rho[0] * rho[0]
 
 		ADD		#65535, AC1			; L46: AC1 = AC1 + 32768
 		ADD		#65535, AC1
@@ -113,10 +114,11 @@ _anf:
 
 		SFTS	AC1, #-18			; L47: AC1>>18
 
-		ADD		T3, AR0
+		AADD	T3, AR0
 		MOV		*AR0, AC3			; L48: AR6 = s_circ[-2]
-		SUB		T3, AR0
-		MOV		AC3, *AR6
+		ASUB	T3, AR0
+		MOV		AC3, *AR7
+		MOV		*AR7, AC2	;AND HERE
 		SFTS	AC3, #16
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AC3, AC1			; AC1 = AR6*HI(AC1)
@@ -125,32 +127,33 @@ _anf:
 		ADD		#2048, AC0 			; L51: AC0 = AC0 + 2048
 
 		SFTS	AC0, #-12			; L53: AC0>>12
-		MOV		*AR3, T1
-		ADD		T1, AR0
+		MOV		*AR3, AC1
+		ADD		AC1, AR0
 		MOV		AC0, *AR0			; s[0] = s_circ[0]
-		SUB		T1, AR0
+		SUB		AC1, AR0
 
 		;STEP 3): update e
-		MOV		*AR1, AC0			; L56: AC0 = *a
-		SFTS	AC0, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPY		*AR5, AC0			; AC0 = AR5*AC0 -> s_circ[-1]*a
+		MOV		*AR1, AC1			; L56: AC0 = *a
+		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
+		MPYM	*AR5, AC1			; AC0 = AR5*AC0 -> s_circ[-1]*a
 
-		MOV		*AR6, AC2			; L57: AC2 = s_circ[-2]
-		ADD		*AR3, AR0
-		MOV 	*AR0, AC3			; AC3 = s[0]
-		SUB		*AR3, AR0
+		MOV		*AR7, AC2	;HERE!		; L57: AC2 = s_circ[-2]
+		MOV		*AR3, T1
+		AADD	T1, AR0
+		MOV 	*AR0, AC0			; AC3 = s[0]
+		ASUB	T1, AR0
 		SFTS	AC2, #14			; AC2<<12
-		SFTS	AC3, #14			; AC3<<12
-		ADD		AC3, AC2			; AC2 += AC3 -> s[0]
-		SUB		AC0, AC2			; AC2-= AC0
+		SFTS	AC0, #14			; AC3<<12
+		ADD		AC2, AC0			; AC2 += AC3 -> s[0]
+		SUB		AC1, AC0			; AC2-= AC0
 
-		ADD		#1024, AC2			; L58: AC2+= 256
+		ADD		#1024, AC0			; L58: AC2+= 256
 
-		SFTS	AC2, #-11			; L59: AC2 -> AC0 >> 9
-		MOV		AC2, T0				; e = AC0
+		SFTS	AC0, #-11			; L59: AC2 -> AC0 >> 11
+		MOV		AC0, T0				; e = AC0
 
 		;STEP 4): update a
-		MOV 	#2<<13, T1			; L62
+		AMOV 	#2<<13, T1			; L62
 		MOV		#200, AC0
 		SFTS	AC0, #16
 		MPY		T1, AC0
@@ -181,8 +184,8 @@ _anf:
 		ADD 	#1, *AR3
 		;End of code
 
-		POP mmap(ST2_55)				; Restore status registers
+		POP mmap(ST2_55)			; Restore status registers
 		POP	mmap(ST1_55)
 		POP	mmap(ST0_55)
 
-		RET								; Exit function call
+		RET							; Exit function call

@@ -52,62 +52,62 @@ _anf:
 
 		;STEP 1): update rho
 		MOV 	*AR2, AC0			; L28: T1 = rho[0] in T1 and then increase pointer -> rho[1]
-		SFTL	AC0, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC0, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPYK 	#32440, AC0			; ACO = rho[0]*lmbd
 
 		MOV		*AR2(+1), AC1 		; L29: T1 = rho[1] and then decrease pointer -> rho[0]
-		SFTL	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPYK	#327 ,AC1			; AC1 = T3*T1 -> (32767-lmbd)*rho[1]
 
 		ADD 	AC1, AC0 			; L30: ACO = AC0 + AC1
 		ADD 	#16384, AC0 		; L31: ACO = ACO + 16384 2^(14)
 
-		SFTL	AC0, #-15			; L32: ACO>>15
+		SFTS	AC0, #-15			; L32: ACO>>15
 		MOV		AC0, T1
 		MOV		T1, *AR2			; rho[0] = AC0
-		SFTL	AC0, #15			; ACO<<15 back to original
+		SFTS	AC0, #15			; ACO<<15 back to original
 
 		;STEP 2): calculate new s and insert in circular buffer
 		MOV		*AR2, AC0			; L35: AC0 = rho[0]
 		ADD		#1, AC0				; AC0 += 1
 
-		SFTL	AC0, #-1			; L36: AC0>>1
+		SFTS	AC0, #-1			; L36: AC0>>1
 
-		SFTL	AC0, #16			; L37: Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC0, #16			; L37: Shift for multiplication (check Mneumonic Instructions)
 		MPYM	*AR1, AC0, AC1		; AC1 = AR7*HI(AC0) -> a_i * (rho[0]>>1)
 
 		ADD 	#32768, AC1			; L38: AC1 = AC1 + #32768
 
-		SFTL	AC1, #-16			; L39: AC1>>16
+		SFTS	AC1, #-16			; L39: AC1>>16
 
 		MOV		*AR4(-1), AR5		; L40: AR5 = s_circ[-1]
-		SFTL	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AR5, AC1			; AC1 = AC1 * AR5 -> AC1 * s_circ[-1]
 
 		MOV 	T0, AC0				; L42: AC0 = y
-		SFTL	AC0, #9				; ACO << 9
+		SFTS	AC0, #9				; ACO << 9
 
 		ADD		AC1, AC0 			; L43: AC0 = AC0 + AC1
 
 		MOV		*AR2, T1			; L45: T1 = rho[0]
 		MOV 	T1, AC1				; AC1 = T1 -> rho[0]
-		SFTL	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		T1, AC1				; AC1 = AC1 * rho[0] -> rho[0] * rho[0]
 
 		ADD		#65535, AC1			; L46: AC1 = AC1 + 32768
 		ADD		#65535, AC1
 		ADD		#2, AC1
 
-		SFTL	AC1, #-18			; L47: AC1>>18
+		SFTS	AC1, #-18			; L47: AC1>>18
 
 		MOV		*AR4(-2), AR6		; L48: AR6 = s_circ[-2]
-		SFTL	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AR6, AC1			; AC1 = AR6*HI(AC1)
 
 		SUB		AC1, AC0			; L50: AC0 = AC0 - AC1
 		ADD		#2048, AC0 			; L51: AC0 = AC0 + 2048
 
-		SFTL	AC0, #-12			; L53: AC0>>12
+		SFTS	AC0, #-12			; L53: AC0>>12
 		MOV 	AC0, *AR4 			; s_circ[0] = AC0 -> equal to s_circ[+1] which is next value
 		MOV		AC0, *AR0			; s[0] = s_circ[+1]
 
@@ -118,46 +118,46 @@ _anf:
 
 		;STEP 3): update e
 		MOV		*AR1, AC0			; L56: AC0 = *a
-		SFTL	AC0, #16			; Shift for multiplication (check Mneumonic Instructions)
+		SFTS	AC0, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AR5, AC0			; AC0 = AR5*AC0 -> s_circ[-1]*a
 
 		MOV		AR6, AC2			; L57: AC2 = s_circ[-2]
 		MOV 	*AR4, AC3			; AC3 = s[0]
-		SFTL	AC2, #14			; AC2<<12
-		SFTL	AC3, #14			; AC3<<12
+		SFTS	AC2, #14			; AC2<<12
+		SFTS	AC3, #14			; AC3<<12
 		ADD		AC3, AC2			; AC2 += AC3 -> s[0]
 		SUB		AC0, AC2			; AC2-= AC0
 
 		ADD		#1024, AC2			; L58: AC2+= 256
 
-		SFTL	AC2, #-11			; L59: AC2 -> AC0 >> 9
+		SFTS	AC2, #-11			; L59: AC2 -> AC0 >> 9
 		MOV		AC2, T0				; e = AC0
 
 		;STEP 4): update a
 		MOV 	#2<<13, T1			; L62
 		MOV		#200, AC0
-		SFTL	AC0, #16
+		SFTS	AC0, #16
 		MPY		T1, AC0
 
 		ADD		#8192, AC0			; L63
 
-		SFTL	AC0, #-14			; L64
+		SFTS	AC0, #-14			; L64
 
 		MOV		AR5, AC1			; L66
-		SFTL	AC1, #16
+		SFTS	AC1, #16
 		MPY		T0,  AC1
 
 		ADD		#4096, AC1			; L67
 
-		SFTL	AC1, #-13			; L68
+		SFTS	AC1, #-13			; L68
 
-		SFTL	AC0, #16			; L69
-		SFTL	AC1, #16
+		SFTS	AC0, #16			; L69
+		SFTS	AC1, #16
 		MPY		AC0, AC1
 
 		ADD		#8192, AC1
 
-		SFTL	AC1, #-14
+		SFTS	AC1, #-14
 
 		ADD		*AR1, AC1
 		MOV		AC1, *AR1

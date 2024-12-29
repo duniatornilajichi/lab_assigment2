@@ -13,7 +13,7 @@
 //#include "usbstk5515.h"
 
 extern int anf(int y, int *s, int*a, int*rho, unsigned int *index);
-//#pragma CODE_SECTION(anf,       ".text:anf");
+
 /* ------------------------------------------------------------------------ *
  *                                                                          *
  *  main( )                                                                 *

@@ -34,23 +34,29 @@ _anf:
 		mov   #0,mmap(ST0_55)      		; Clear all fields (OVx, C, TCx)
 		or    #4100h, mmap(ST1_55)  	; Set CPL (bit 14), SXMD (bit 8);
 		and   #07940h, mmap(ST1_55)     ; Clear BRAF, M40, SATD, C16, 54CM, ASM
-		; ARMS                      	; Disable ARMS bit 15 in ST2_55
+		bclr ARMS                      	; Disable ARMS bit 15 in ST2_55
 
 		; add your implementation here:
 		;INIT 0):  pointer AR4
 		MOV 	*AR3, T1			; T1 = *index
-		AND     #3, T1				; T1 = T1 & 3 -> index to index from 0 to 3
 		MOV     T1, AR4				; AR4 = T1 -> (index from 0 to 3)
 
-		MOV 	*AR3, T2			; T2 = *index -1
+		MOV 	T1, T2			; T2 = *index -1
 		SUB		#1, T2
-		AND		#3, T2
+		XCC		AR4==#0
+		MOV		#2, T2
 
-		MOV 	*AR3, T3			; T2 = *index -2
-		SUB		#2, T3
-		AND		#3, T3
+		MOV 	T1, T3			; T2 = *index -2
+		ADD		#1, T3
+		SUB		#2, AR4
+		XCC		AR4>=#0
+		MOV		#0, T3
 
-		ADD		AR4, AR0
+		ADD		#1, T1			; update iddex
+		XCC		AR4==#0
+		MOV		#0, T1
+		ADD		#2, AR4
+		MOV  	T1, *AR3
 
 		;STEP 1): update rho
 		MOV 	*AR2, AC0			; L28: T1 = rho[0] in T1 and then increase pointer -> rho[1]
@@ -82,7 +88,7 @@ _anf:
 
 		SFTS	AC1, #-16			; L39: AC1>>16
 
-		ADD		T2, AR0			; s-1
+		ADD		T2, AR0				; s-1
 		MOV		*AR0, AR5			; L40: AR5 = s_circ[-1]
 		SUB		T2, AR0
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
@@ -105,7 +111,7 @@ _anf:
 		SFTS	AC1, #-18			; L47: AC1>>18
 
 		ADD		T3, AR0
-		MOV		*AR0, AR6		; L48: AR6 = s_circ[-2]
+		MOV		*AR0, AR6			; L48: AR6 = s_circ[-2]
 		SUB		T3, AR0
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AR6, AC1			; AC1 = AR6*HI(AC1)
@@ -114,7 +120,9 @@ _anf:
 		ADD		#2048, AC0 			; L51: AC0 = AC0 + 2048
 
 		SFTS	AC0, #-12			; L53: AC0>>12
-		MOV		AC0, *AR0			; s[0] = s_circ[+1]
+		ADD		AR4, AR0
+		MOV		AC0, *AR0			; s[0] = s_circ[0]
+		SUB		AR4, AR0
 
 
 		;STEP 3): update e
@@ -123,7 +131,9 @@ _anf:
 		MPY		AR5, AC0			; AC0 = AR5*AC0 -> s_circ[-1]*a
 
 		MOV		AR6, AC2			; L57: AC2 = s_circ[-2]
+		ADD		AR4, AR0
 		MOV 	*AR0, AC3			; AC3 = s[0]
+		SUB		AR4, AR0
 		SFTS	AC2, #14			; AC2<<12
 		SFTS	AC3, #14			; AC3<<12
 		ADD		AC3, AC2			; AC2 += AC3 -> s[0]
@@ -162,8 +172,6 @@ _anf:
 
 		ADD		*AR1, AC1
 		MOV		AC1, *AR1
-
-		ADD		#1, *AR3
 		;End of code
 
 		POP mmap(ST2_55)				; Restore status registers

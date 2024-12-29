@@ -30,7 +30,7 @@ int main( void )
 	unsigned int index = 0;
 	char  tempc[2];
 
-	int s[4] = {0,0,0,0};
+	int s[3] = {0,0,0};
 	int a[1] = {16384}; // a = 1
 	int rho[2] = {26214, 28836}; // rho adaptive {rho=0.8, rho_inf=0.88}
 

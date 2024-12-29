@@ -18,18 +18,16 @@
 ;* FUNCTION DEFINITION: _anf_asm		                                       *
 ;*******************************************************************************
 ; int anf(int y,				=> T0
-;		  int *s,				=> AR0 	;s [t, t-1, t-2, t-3]
+;		  int *s,				=> AR0 	;s [t, t-1, t-2]
 ;		  int *a,				=> AR1
 ; 		  int *rho,				=> AR2	;rho[0,1]
 ;	      unsigned int* index	=> AR3
 ;		 );						=> T0
 ;
-; 	k 			=>	*AR3
-; 	k_minus_1 	=> 	T2
-; 	k_minus_2	=>	T3
+; 	s[0]		=>	*AR0
+; 	s[-1]	 	=> 	*AR0(+1)
+; 	s[-2]		=>	*AR0(+2)
 ;
-; 	s[-1] 		=>	*AR5
-; 	s[-2]		=>  *AR7
 _anf:
 
 		PSH  mmap(ST0_55)	; Store original status register values on stack
@@ -42,25 +40,12 @@ _anf:
 		bclr ARMS                      	; Disable ARMS bit 15 in ST2_55
 
 		; add your implementation here:
-		;INIT 0):  pointers k
-		MOV 	*AR3, T1			; T1 = *index
-		MOV     *AR3, T2			;
-		ASUB	#2, T1				; check if index > 2 by subtrancting 2 and comparing
-		XCC		T1>#0
-		AMOV	#0, T2
-		AMOV	T2, T1
-		MOV		T2, *AR3
+		;INIT 0):  update s
 
-		ASUB	#1, T1				; L21: T1 = k-1
-		AMOV	T1, T2				; if (k-1) < 0 -> T2 = 2 else T2 = k-1
-		XCC		T1<#0				; T2 = k-1 from 0-2
-		AMOV	#2, T2
-
-		AMOV	T2, T1				; L22: T1 = k-1 from 0-2
-		ASUB	#1, T1				; T1 = T2-1
-		AMOV	T1, T3				; if(T2-1) < 0 -> T3 = 2 else T3 = T2 -> (k-1 from 0-2) -1
-		XCC		T1<#0
-		AMOV	#2, T3				; T3 = k-2 from 0-2
+		MOV		*AR0(+1), AC0		; s[2] = s[1]
+		MOV		AC0, *AR0(+2)
+		MOV		*AR0, AC0
+		MOV		AC0, *AR0(+1)		; s[1] = s[0]
 
 		;STEP 1): update rho
 		MOV 	*AR2, AC0			; L28: T1 = rho[0] in T1 and then increase pointer -> rho[1]
@@ -77,7 +62,7 @@ _anf:
 		SFTS	AC0, #-15			; L32: ACO>>15
 		MOV		AC0, *AR2			; rho[0] = AC0
 
-		;STEP 2): calculate new s and insert in circular buffer
+		;STEP 2): calculate new s
 		ADD		#1, AC0				; AC0 += 1
 
 		SFTS	AC0, #-1			; L36: AC0>>1
@@ -89,13 +74,10 @@ _anf:
 
 		;SFTS	AC1, #-16			; L39: AC1>>16
 
-		AADD	T2, AR0				; s-1
-		MOV		*AR0, AC2			; L40: AR5 = s_circ[-1]
-		ASUB	T2, AR0
-		MOV		AC2, *AR5
+		MOV		*AR0(+1), AC2		; L40: AR0(+1) = s[-1]
 		SFTS	AC2, #16
 		;SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPY		AC2, AC1			; AC1 = AC1 * AR5 -> AC1 * s_circ[-1]
+		MPY		AC2, AC1			; AC1 = AC1 * AR0+1 -> AC1 * s_circ[-1]
 
 		MOV 	T0, AC0				; L42: AC0 = y
 		SFTS	AC0, #9				; ACO << 9
@@ -114,11 +96,7 @@ _anf:
 
 		SFTS	AC1, #-18			; L47: AC1>>18
 
-		AADD	T3, AR0
-		MOV		*AR0, AC3			; L48: AR6 = s_circ[-2]
-		ASUB	T3, AR0
-		MOV		AC3, *AR7
-		MOV		*AR7, AC2	;AND HERE
+		MOV		*AR0(+2), AC3		; L48: AR6 = s[-2]
 		SFTS	AC3, #16
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
 		MPY		AC3, AC1			; AC1 = AR6*HI(AC1)
@@ -127,21 +105,15 @@ _anf:
 		ADD		#2048, AC0 			; L51: AC0 = AC0 + 2048
 
 		SFTS	AC0, #-12			; L53: AC0>>12
-		MOV		*AR3, AC1
-		ADD		AC1, AR0
 		MOV		AC0, *AR0			; s[0] = s_circ[0]
-		SUB		AC1, AR0
 
 		;STEP 3): update e
 		MOV		*AR1, AC1			; L56: AC0 = *a
 		SFTS	AC1, #16			; Shift for multiplication (check Mneumonic Instructions)
-		MPYM	*AR5, AC1			; AC0 = AR5*AC0 -> s_circ[-1]*a
+		MPYM	*AR0(+1), AC1		; AC0 = AR0+1*AC0 -> s_circ[-1]*a
 
-		MOV		*AR7, AC2	;HERE!		; L57: AC2 = s_circ[-2]
-		MOV		*AR3, T1
-		AADD	T1, AR0
+		MOV		*AR0(+2), AC2		; L57: AC2 = s_circ[-2]
 		MOV 	*AR0, AC0			; AC3 = s[0]
-		ASUB	T1, AR0
 		SFTS	AC2, #14			; AC2<<12
 		SFTS	AC0, #14			; AC3<<12
 		ADD		AC2, AC0			; AC2 += AC3 -> s[0]
@@ -162,7 +134,7 @@ _anf:
 
 		SFTS	AC0, #-14			; L64
 
-		MOV		*AR5, AC1			; L66
+		MOV		*AR0(+1), AC1		; L66
 		SFTS	AC1, #16
 		MPY		T0,  AC1
 

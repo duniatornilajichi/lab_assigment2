@@ -5,11 +5,10 @@
 ;*----------------------------------------------------------------------------*
 ;*                                                                            *
 ;*  The rate of convergence of the filter is determined by parameter MU       *
-;*                                                                            * 
+;*                                                                            *
 ;******************************************************************************
 ;/*
 	.mmregs
-MU		.set		0x0200		; mu
 ; Functions callable from C code
 
 	.sect	".text"
@@ -38,7 +37,6 @@ _anf:
 		; ARMS                      	; Disable ARMS bit 15 in ST2_55
 
 		; add your implementation here:
-
 		;INIT 0): circular buffer AR4
 		MOV 	#4, BK47			; set size to 4
 		BSET 	AR4LC				; set as circular
@@ -117,10 +115,6 @@ _anf:
 		MOV		AR6, *AR0(+2)		; s[2] = AR6 -> s_circ[-2]
 		MOV   	*AR4(-3), T1		;
 		MOV		T1, *AR0(+3)  		; s[3] = last value of circ
-		;TO CHECK if Q factors remain the same or need shifting.
-		;TO CHECK how the fuck did the signed and unsigned thing work in Asembly
-		;TO CHECK ADD and SUB  for non AC and AC operations
-		;TO CHECK MOV to different sizes
 
 		;STEP 3): update e
 		MOV		*AR1, AC0			; L56: AC0 = *a
@@ -169,16 +163,13 @@ _anf:
 		MOV		AC1, *AR1
 
 		ADD		#1, *AR3
-
 		;End of code
 
 		POP mmap(ST2_55)				; Restore status registers
 		POP	mmap(ST1_55)
 		POP	mmap(ST0_55)
-                               
-		RET								; Exit function call
 
-; TO CHECK if AR4 remains the same
+		RET								; Exit function call
 setzero:
 		MOV		#0, *AR4			; AR[0] = 0
 		MOV		#0, *AR4(+1)		; AR[1] = 0
